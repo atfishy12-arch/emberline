@@ -115,7 +115,7 @@ export default function About() {
                 <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-ash/12" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
 
-                <div className="glass absolute bottom-5 left-5 right-5 rounded-2xl px-5 py-4">
+                <div className="zoom-layer glass absolute bottom-5 left-5 right-5 rounded-2xl px-5 py-4">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-faint">
                     Material study 04 — Burnt larch
                   </p>

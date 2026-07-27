@@ -123,7 +123,7 @@ export default function Collection() {
     <article
       key={home.id}
       data-cursor="view"
-      className="group glass relative flex h-[64vh] w-[80vw] shrink-0 flex-col overflow-hidden rounded-[28px] p-8 sm:h-[66vh] sm:w-[54vw] lg:w-[40vw]"
+      className="group glass relative flex h-[64vh] w-[80vw] shrink-0 flex-col overflow-hidden rounded-[28px] p-8 shadow-[0_10px_40px_-24px_rgba(0,0,0,0.9)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_30px_70px_-28px_rgba(255,90,31,0.5)] sm:h-[66vh] sm:w-[54vw] lg:w-[40vw]"
     >
       {/* plot + status */}
       <div className="flex items-start justify-between gap-4">

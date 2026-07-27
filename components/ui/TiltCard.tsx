@@ -2,7 +2,7 @@
 
 import { type ReactNode, useRef } from 'react';
 import { createAnimatable, spring, type AnimatableObject } from 'animejs';
-import { SPRING } from '@/lib/motion';
+import { SPRING, easeOut } from '@/lib/motion';
 import { useIsomorphicLayoutEffect, useIsTouch, useReducedMotion } from '@/lib/hooks';
 
 interface TiltCardProps {
@@ -42,11 +42,14 @@ export default function TiltCard({
 
   useIsomorphicLayoutEffect(() => {
     if (disabled || !innerRef.current) return;
+    const cfg = spring(SPRING.tilt);
     rig.current = createAnimatable(innerRef.current, {
-      rotateX: 0,
-      rotateY: 0,
-      translateZ: 0,
-      ease: spring(SPRING.tilt),
+      rotateX: cfg,
+      rotateY: cfg,
+      translateZ: cfg,
+      // Scale eases rather than springs: a spring here fights the rotation
+      // and reads as wobble on a large surface.
+      scale: { duration: 220, ease: easeOut(3) },
     });
     return () => {
       rig.current?.revert();
@@ -67,10 +70,20 @@ export default function TiltCard({
     el.style.setProperty('--cy', `${ny * 100}%`);
     el.style.setProperty('--glare-angle', `${150 + nx * 60}deg`);
 
+    /* Light-reactive shadow: the card is lit from the cursor, so the shadow
+       is cast *away* from it. Offsets are inverted and the spread grows with
+       distance from centre, which is what sells the tilt as a real object
+       lifting off the page rather than a rotating rectangle. */
+    const offX = (0.5 - nx) * 26;
+    const offY = (0.5 - ny) * 26;
+    el.style.setProperty('--shadow-x', `${offX.toFixed(1)}px`);
+    el.style.setProperty('--shadow-y', `${(offY + 18).toFixed(1)}px`);
+
     if (disabled || !rig.current) return;
     rig.current.rotateX((0.5 - ny) * max * 2);
     rig.current.rotateY((nx - 0.5) * max * 2);
     rig.current.translateZ(lift);
+    rig.current.scale(1.018);
   };
 
   const onLeave = () => {
@@ -78,11 +91,16 @@ export default function TiltCard({
     if (el) {
       el.style.setProperty('--cx', '50%');
       el.style.setProperty('--cy', '50%');
+      el.style.setProperty('--shadow-x', '0px');
+      el.style.setProperty('--shadow-y', '0px');
     }
     if (!rig.current) return;
+    // Softer reset than the pursuit: leaving should feel like settling, so
+    // rotation, depth and scale all return through the same spring.
     rig.current.rotateX(0);
     rig.current.rotateY(0);
     rig.current.translateZ(0);
+    rig.current.scale(1);
   };
 
   return (
@@ -91,11 +109,23 @@ export default function TiltCard({
       data-cursor={cursor}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      className={`group relative rounded-3xl [perspective:1200px] ${className}`}
-      style={{ ['--cx' as string]: '50%', ['--cy' as string]: '50%' }}
+      className={`group relative rounded-3xl [perspective:1000px] ${className}`}
+      style={{
+        ['--cx' as string]: '50%',
+        ['--cy' as string]: '50%',
+        ['--shadow-x' as string]: '0px',
+        ['--shadow-y' as string]: '0px',
+      }}
     >
       <div
         ref={innerRef}
+        /* Inline rather than a Tailwind arbitrary value: `shadow-[var(--x)_…]`
+           does not compile to a usable --tw-shadow, so the rule silently
+           resolves to no shadow at all. */
+        style={{
+          boxShadow: 'var(--shadow-x) var(--shadow-y) 44px -20px rgba(0,0,0,0.85)',
+          transition: 'box-shadow 300ms cubic-bezier(0.16,1,0.3,1)',
+        }}
         className="gpu relative h-full rounded-[inherit] [transform-style:preserve-3d]"
       >
         {spotlight && (

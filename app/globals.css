@@ -189,6 +189,9 @@
   .zoom-frame {
     @apply relative overflow-hidden rounded-[28px];
   }
+  /* Depth zoom + a barely-there rotation. The rotation is what stops a hover
+     zoom reading as a CSS default: real camera push-in is never perfectly
+     axis-aligned. */
   .zoom-frame img {
     transition:
       transform 1.4s cubic-bezier(0.16, 1, 0.3, 1),
@@ -196,7 +199,17 @@
     will-change: transform;
   }
   .zoom-frame:hover img {
-    transform: scale(1.07);
+    transform: scale(1.075) rotate(0.7deg);
+    filter: brightness(1.06) saturate(1.08);
+  }
+  /* Overlays inside the frame drift the opposite way, so the layers separate
+     in depth instead of moving as one flat plate. */
+  .zoom-frame .zoom-layer {
+    transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+  .zoom-frame:hover .zoom-layer {
+    transform: scale(1.02) translateY(-6px);
   }
 
   /* Hairline rule that glows toward the cursor. */

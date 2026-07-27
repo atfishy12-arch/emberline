@@ -7,8 +7,11 @@ import {
   useRef,
 } from 'react';
 import { createAnimatable, spring, type AnimatableObject } from 'animejs';
-import { SPRING } from '@/lib/motion';
+import { SPRING, easeOut } from '@/lib/motion';
 import { useIsomorphicLayoutEffect, useIsTouch, useReducedMotion } from '@/lib/hooks';
+
+/** Constant upward offset applied while hovered, in px. */
+const LIFT = 3;
 
 type MagneticButtonProps<T extends ElementType> = {
   as?: T;
@@ -61,8 +64,16 @@ export default function MagneticButton<T extends ElementType = 'button'>({
     if (disabled || !ref.current || !labelRef.current) return;
 
     const cfg = spring(SPRING.magnetic);
-    shell.current = createAnimatable(ref.current, { x: 0, y: 0, ease: cfg });
-    label.current = createAnimatable(labelRef.current, { x: 0, y: 0, ease: cfg });
+    /* Position rides a spring so it settles with weight, but `scale` gets its
+       own short ease-out: a spring on scale reads as wobble, and the press
+       needs to feel immediate. One animatable owns the whole transform, so
+       nothing fights over it. */
+    shell.current = createAnimatable(ref.current, {
+      x: cfg,
+      y: cfg,
+      scale: { duration: 190, ease: easeOut(3) },
+    });
+    label.current = createAnimatable(labelRef.current, { x: cfg, y: cfg });
 
     return () => {
       shell.current?.revert();
@@ -80,14 +91,28 @@ export default function MagneticButton<T extends ElementType = 'button'>({
     const dy = Math.max(-radius, Math.min(radius, e.clientY - (r.top + r.height / 2)));
 
     shell.current.x(dx * strength);
-    shell.current.y(dy * strength);
+    // LIFT is a constant upward offset added to the magnetic pull, so the
+    // button rises off the page while still leaning toward the cursor.
+    shell.current.y(dy * strength - LIFT);
     label.current.x(dx * strength * 0.4);
     label.current.y(dy * strength * 0.4);
+  };
+
+  const onEnter = () => {
+    if (disabled) return;
+    shell.current?.scale(1.035);
+  };
+
+  /* Press reads as the button being pushed *into* the page. */
+  const onPress = () => {
+    if (disabled) return;
+    shell.current?.scale(0.97);
   };
 
   const reset = () => {
     shell.current?.x(0);
     shell.current?.y(0);
+    shell.current?.scale(1);
     label.current?.x(0);
     label.current?.y(0);
   };
@@ -97,9 +122,14 @@ export default function MagneticButton<T extends ElementType = 'button'>({
       ref={ref}
       data-cursor={cursor}
       onPointerMove={onMove}
+      onPointerEnter={onEnter}
       onPointerLeave={reset}
+      onPointerDown={onPress}
+      onPointerUp={onEnter}
       onBlur={reset}
-      className={`group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full transition-transform duration-200 active:scale-95 ${className}`}
+      /* Only box-shadow transitions in CSS — the transform belongs to anime,
+         and a CSS `active:scale` here would silently overwrite it. */
+      className={`group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full shadow-[0_2px_10px_-6px_rgba(0,0,0,0.7)] transition-shadow duration-200 ease-out hover:shadow-[0_16px_38px_-12px_rgba(255,90,31,0.6)] ${className}`}
       {...rest}
     >
       {/* travelling sheen on hover */}
@@ -107,10 +137,11 @@ export default function MagneticButton<T extends ElementType = 'button'>({
         <span className="absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-ash/20 opacity-0 blur-md transition-opacity duration-300 group-hover:animate-shimmer group-hover:opacity-100" />
       </span>
 
-      {/* halo */}
+      {/* halo — deepens as well as appears, so the glow reads as intensity
+          rather than a light switch */}
       <span
         aria-hidden
-        className={`pointer-events-none absolute -inset-6 -z-20 rounded-full bg-gradient-to-r ${glowClassName} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100`}
+        className={`pointer-events-none absolute -inset-6 -z-20 rounded-full bg-gradient-to-r ${glowClassName} opacity-0 blur-2xl transition-all duration-200 ease-out group-hover:-inset-8 group-hover:opacity-100`}
       />
 
       <span ref={labelRef} className="relative flex items-center gap-2">
