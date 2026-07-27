@@ -13,6 +13,7 @@ import Proof from '@/components/sections/Proof';
 import About from '@/components/sections/About';
 import Statement from '@/components/sections/Statement';
 import Collection from '@/components/sections/Collection';
+import Board from '@/components/sections/Board';
 import Features from '@/components/sections/Features';
 import Showcase from '@/components/sections/Showcase';
 import Timeline from '@/components/sections/Timeline';
@@ -56,6 +57,7 @@ export default function Page() {
           <Showcase />
         </Scene>
         <Timeline />
+        <Board />
         <Scene>
           <Stats />
         </Scene>

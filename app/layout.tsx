@@ -1,7 +1,18 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-const SITE = 'https://atfishy12-arch.github.io/emberline/';
+/**
+ * Canonical origin, resolved per host so the social card keeps working
+ * wherever this is deployed:
+ *   1. NEXT_PUBLIC_SITE_URL — set it once for a custom domain.
+ *   2. Vercel's production URL, injected at build time.
+ *   3. The GitHub Pages fallback.
+ */
+const SITE =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/`
+    : 'https://atfishy12-arch.github.io/emberline/');
 
 /**
  * Next applies `basePath` to routes and to <Image>, but NOT to the URLs in
