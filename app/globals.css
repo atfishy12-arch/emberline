@@ -1,0 +1,306 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/*  Tokens — wildfire                                                  */
+/* ------------------------------------------------------------------ */
+:root {
+  --ink: #0a0705;
+  --ember: #ff5a1f;
+  --flame: #ff2d46;
+  --amber: #ffb020;
+  --ash: #fff1e4;
+  --glass: rgba(255, 235, 215, 0.07);
+  --glass-line: rgba(255, 220, 190, 0.14);
+
+  /* live pointer position — written once per frame by CursorGlow */
+  --mx: 50vw;
+  --my: 40vh;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Base                                                               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: auto; /* Lenis owns scrolling */
+    /* `clip`, not `hidden`. Entrance animations park elements off-screen to
+       the right before they play, which would otherwise make the whole page
+       scroll sideways. `hidden` would fix that too, but it establishes a
+       scroll container and breaks every `position: sticky` section on the
+       page; `clip` clips without becoming a scrollport. */
+    overflow-x: clip;
+  }
+
+  body {
+    @apply bg-ink font-sans text-ash antialiased;
+    overflow-x: clip;
+    text-rendering: optimizeLegibility;
+  }
+
+  html.is-loading body {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  ::selection {
+    background: rgba(255, 90, 31, 0.4);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070403;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--amber), var(--ember), var(--flame));
+    border-radius: 99px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+
+  .split-word,
+  .split-line {
+    display: inline-block;
+    will-change: transform;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Components                                                         */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .glass {
+    /* Do not hand-write -webkit-backdrop-filter here. Lightning CSS treats the
+       prefixed and standard properties as one declaration and keeps whichever
+       comes last, so a trailing prefixed copy silently deletes the standard
+       one. Autoprefixer adds the prefix for us. */
+    backdrop-filter: blur(22px) saturate(130%);
+    border: 1px solid var(--glass-line);
+    background: linear-gradient(
+      160deg,
+      rgba(255, 235, 215, 0.085) 0%,
+      rgba(255, 200, 160, 0.03) 48%,
+      rgba(255, 150, 90, 0.05) 100%
+    );
+    box-shadow: theme('boxShadow.glass');
+  }
+
+  .glass-soft {
+    backdrop-filter: blur(16px) saturate(125%);
+    background: rgba(255, 235, 215, 0.045);
+    border: 1px solid rgba(255, 220, 190, 0.1);
+  }
+
+  /* Neumorphic, warmed: inner light edge + deep soot shadow. */
+  .neu {
+    background: linear-gradient(145deg, #1c1410, #0d0906);
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 200, 160, 0.08),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.6),
+      14px 14px 36px rgba(3, 2, 1, 0.85),
+      -8px -8px 30px rgba(255, 90, 31, 0.05);
+  }
+
+  .gradient-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      130deg,
+      rgba(255, 45, 70, 0.9),
+      rgba(255, 90, 31, 0.85) 32%,
+      rgba(255, 176, 32, 0.5) 58%,
+      rgba(255, 241, 228, 0.16)
+    );
+    background-size: 220% 220%;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gradient-pan 9s ease infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* White-hot core bleeding out to ember and crimson. */
+  .gradient-text {
+    background: linear-gradient(
+      100deg,
+      #fff1e4 0%,
+      var(--amber) 24%,
+      var(--ember) 46%,
+      var(--flame) 66%,
+      var(--amber) 84%,
+      #fff1e4 100%
+    );
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-pan 9s ease-in-out infinite;
+  }
+
+  .text-dim {
+    color: rgba(255, 241, 228, 0.6);
+  }
+  .text-faint {
+    color: rgba(255, 241, 228, 0.38);
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em];
+    color: rgba(255, 241, 228, 0.72);
+    background: rgba(255, 200, 160, 0.05);
+    border: 1px solid rgba(255, 220, 190, 0.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .zoom-frame {
+    @apply relative overflow-hidden rounded-[28px];
+  }
+  .zoom-frame img {
+    transition:
+      transform 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.8s ease;
+    will-change: transform;
+  }
+  .zoom-frame:hover img {
+    transform: scale(1.07);
+  }
+
+  /* Hairline rule that glows toward the cursor. */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 90, 31, 0.45) 30%,
+      rgba(255, 176, 32, 0.35) 60%,
+      transparent
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Utilities                                                          */
+/* ------------------------------------------------------------------ */
+@layer utilities {
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, rgba(255, 200, 160, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 200, 160, 0.06) 1px, transparent 1px);
+    background-size: 76px 76px;
+  }
+
+  .grid-spotlight {
+    -webkit-mask-image: radial-gradient(
+      420px 420px at var(--mx) var(--my),
+      #000 0%,
+      rgba(0, 0, 0, 0.35) 45%,
+      transparent 78%
+    );
+    mask-image: radial-gradient(
+      420px 420px at var(--mx) var(--my),
+      #000 0%,
+      rgba(0, 0, 0, 0.35) 45%,
+      transparent 78%
+    );
+  }
+
+  .mask-fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  }
+
+  .noise {
+    position: fixed;
+    inset: -50%;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: noise-shift 0.6s steps(3) infinite;
+  }
+
+  .stroke-text {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 241, 228, 0.2);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes noise-shift {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(-3%, 2%); }
+  66% { transform: translate(2%, -3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Custom cursor                                                      */
+/* ------------------------------------------------------------------ */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reduced motion                                                     */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .noise {
+    display: none;
+  }
+}
