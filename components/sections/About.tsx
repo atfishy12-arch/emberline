@@ -87,7 +87,7 @@ export default function About() {
                       cool half magenta. Desaturating and tinting keeps one
                       coherent ember range. */}
                   <Image
-                    src="/art/texture.png"
+                    src="/art/texture.webp"
                     alt="Material study — light raking across burnt larch"
                     fill
                     sizes="(max-width: 1024px) 100vw, 45vw"
